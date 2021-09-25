@@ -8,7 +8,7 @@ async function sendEmail(req, res) {
     await sendgrid.send({
       to: "daniel@bldrscove.com", // Change to your recipient
       from: "edwin@buildbeautifulspaces.com", // Change to your verified sender
-      subject: `${req.body.subject} Sending with SendGrid is Fun`,
+      subject: "Sending with SendGrid is Fun",
       text: "and easy to do anywhere, even with Node.js",
       html: `<div><strong>and easy to do anywhere</strong>, even with Node.js</div>`,
     });
