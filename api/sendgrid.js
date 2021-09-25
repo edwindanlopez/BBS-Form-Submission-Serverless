@@ -1,27 +1,9 @@
-import sendgrid from "@sendgrid/mail";
+const sendgrid = require("@sendgrid/mail");
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
-async function sendEmail(req, res) {
-  try {
-    console.log("Logging sendEmal req.body: ", req.body);
-    await sendgrid.send({
-      to: "daniel@bldrscove.com", // Change to your recipient
-      from: "edwin@buildbeautifulspaces.com", // Change to your verified sender
-      subject: "Sending with SendGrid is Fun",
-      text: "and easy to do anywhere, even with Node.js",
-      html: `<div><strong>and easy to do anywhere</strong>, even with Node.js</div>`,
-    });
-  } catch (error) {
-    console.log("Error on sendEmail Function: ", error);
-    return res
-      .status(error.statusCode || 500)
-      .json({ sendGridError: error.message });
-  }
+module.exports = async function (req, res) {
+  console.log("Req.body", req.body);
 
-  return res.status(200).json({ sendGridResponse: req.body });
-}
-
-const allowCors = (fn) => async (req, res) => {
   res.setHeader("Accept-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", true);
@@ -39,7 +21,29 @@ const allowCors = (fn) => async (req, res) => {
     res.status(200).end();
     return;
   }
-  return await fn(req, res);
-};
 
-module.exports = allowCors(sendEmail);
+  const msg = {
+    to: "daniel@bldrscove.com", // Change to your recipient
+    from: "edwin@buildbeautifulspaces.com", // Change to your verified sender
+    subject: "Try 6",
+    text: "This version deployed",
+    html: `<div><strong>Sending with</strong>the original function set up.</div>`,
+  };
+
+  sendgrid
+    .send(msg)
+    .then(() => {
+      console.log("Email sent");
+      res.status(200).json({
+        success: true,
+        message: "Email sent",
+      });
+    })
+    .catch((error) => {
+      console.log("Error on sendEmail Function: ", error);
+      res.status(500).json({
+        success: false,
+        message: `Server error: ${error}`,
+      });
+    });
+};
