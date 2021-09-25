@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/tgdpez/BBS-Form-Submission-Serverless#readme",
   "dependencies": {
-    "@sendgrid/mail": "^7.4.7",
-    "micro-cors": "^0.1.1"
+    "@sendgrid/mail": "^7.4.7"
   }
 }
