@@ -1,0 +1,22 @@
+{
+  "name": "bbs-form-submission-serverless",
+  "version": "1.0.0",
+  "description": "Serverless function for handling form submission",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tgdpez/BBS-Form-Submission-Serverless.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tgdpez/BBS-Form-Submission-Serverless/issues"
+  },
+  "homepage": "https://github.com/tgdpez/BBS-Form-Submission-Serverless#readme",
+  "dependencies": {
+    "@sendgrid/mail": "^7.4.7"
+  }
+}
