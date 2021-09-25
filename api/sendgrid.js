@@ -22,9 +22,8 @@ async function sendEmail(req, res) {
 
 const allowCors = (fn) => async (req, res) => {
   res.setHeader("Accept-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader("Access-Control-Allow-Origin", "*");
-  xhr.setRequestHeader("Content-Type", "Content-Type", "text/plain");
+  res.setHeader("Access-Control-Allow-Credentials", true);
   // another common pattern
   // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
   res.setHeader(
