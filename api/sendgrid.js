@@ -2,13 +2,21 @@ const sendgrid = require("@sendgrid/mail");
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
 module.exports = async function (req, res) {
+  // call sendgrid first, since this request doesn't allow any CORS
   if (req.method === "POST") {
     const msg = {
-      to: "daniel@bldrscove.com", // Change to your recipient
-      from: "edwin@buildbeautifulspaces.com", // Change to your verified sender
-      subject: "Try 6",
-      text: "This version deployed",
-      html: `<div><strong>Sending with</strong>the original function set up.</div>`,
+      to: req.body.email, // Change to your recipient
+      from: process.env.SENDGRID_VERIFIED_SENDER, // verified sender
+      subject: req.body.subject,
+      message: req.body.message,
+      html: `<div>
+        <h1>You're being contacted by: ${req.body.firstName} ${req.body.lastName}</h1>
+        <h5>Their prefered method of contact is: ${req.body["method-of-contact"]} </h5>
+        <h5>You can reach them at ${req.body.phone}, </h5>
+        <h5>Or through their email ${req.body.email}</h5>
+        <p>They've reached out regarding:</p>
+        <p>${req.body.message}</p>
+      </div>`,
     };
 
     sendgrid
@@ -30,7 +38,8 @@ module.exports = async function (req, res) {
         });
       });
   }
-  // set permission headers for client
+
+  // set permission headers for original client call
   res.setHeader("Accept-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", true);
