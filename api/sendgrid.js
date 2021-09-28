@@ -1,15 +1,7 @@
 const sendgrid = require("@sendgrid/mail");
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
-module.exports = async function (req, res) {
-  // handle pre-flight request
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
-
-  console.log("req.body.email", req.body.email);
-
+const fetchSendGrid = (req, res) => {
   sendgrid
     .send({
       to: req.body.email, // Change to your recipient
@@ -26,11 +18,14 @@ module.exports = async function (req, res) {
       </div>`,
     })
     .then(() => {
-      res.status(200).json({
-        location: "From within the sendgrid funcion",
-        success: true,
-        message: "Email sent",
-      });
+      res
+        .status(200)
+        .json({
+          location: "From within the sendgrid funcion",
+          success: true,
+          message: "Email sent",
+        })
+        .end();
     })
     .catch((error) => {
       console.log("Error on sendEmail Function: ", error);
@@ -41,11 +36,14 @@ module.exports = async function (req, res) {
         message: `Server error: ${error}`,
       });
     });
+};
 
+const allowCors = (fn) => async (req, res) => {
   res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Accept-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Origin", "*");
   // another common pattern
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
+  // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,OPTIONS,PATCH,DELETE,POST,PUT"
@@ -54,4 +52,11 @@ module.exports = async function (req, res) {
     "Access-Control-Allow-Headers",
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
   );
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+  return await fn(req, res);
 };
+
+module.exports = allowCors(fetchSendGrid);
