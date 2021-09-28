@@ -4,8 +4,8 @@ sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 const fetchSendGrid = (req, res) => {
   sendgrid
     .send({
-      to: process.env.SENDGRID_VERIFIED_SENDER, // verified sender
-      from: req.body.email, // submission sender
+      to: req.body.email, // submission sender
+      from: process.env.SENDGRID_VERIFIED_SENDER, // verified sender
       subject: req.body.subject,
       message: req.body.message,
       html: `<div>
