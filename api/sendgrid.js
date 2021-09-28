@@ -9,13 +9,9 @@ const fetchSendGrid = (req, res) => {
       subject: req.body.subject,
       message: req.body.message,
       html: `<div>
-        <h1>You're being contacted by: ${req.body.firstName} ${
-        req.body.lastName
-      }</h1>
+        <h1>You're being contacted by: ${req.body.firstName} ${req.body.lastName}</h1>
         -------------------------------------------------
-        <h3>Their prefered method of contact is: ${
-          req.body["method-of-contact"]
-        } </h3>
+        <h3>Their prefered method of contact is: ${req.body["method-of-contact"]} </h3>
         -------------------------------------------------
         <h3>You can reach them at ${req.body.phone}, </h3>
         <h3>Or through their email ${req.body.email}</h3>
@@ -23,7 +19,7 @@ const fetchSendGrid = (req, res) => {
         <p>They've reached out regarding:</p>
         <p>${req.body.message}</p>
         -------------------------------------------------
-        ${req.body.file && <image src={req.body.file} alt='image-attachment' />}
+        <image src=${req.body.file} alt="img-attachment" />
         -------------------------------------------------
         <br/>
         <p>They live in ${req.body.city}</p>
