@@ -3,13 +3,16 @@ const sendgrid = require("@sendgrid/mail");
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.handler = async (event, context) => {
-  const headers = {
-    "Accept-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Credentials": true,
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  let headers = {
+    "Access-Control-Allow-Headers":
+      "Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Origin",
+    "Content-Type": "application/json", //optional
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "8640",
   };
+
+  headers["Access-Control-Allow-Origin"] = "*";
+  headers["Vary"] = "Origin";
 
   const { fullName, email, message, files } = JSON.parse(event.body);
 
@@ -52,32 +55,43 @@ exports.handler = async (event, context) => {
       });
   });
 
-  if (event.httpMethod === "OPTIONS") {
+  try {
+    if (event.httpMethod === "OPTIONS") {
+      return {
+        statusCode: 204,
+        headers,
+      };
+    } else if (event.httpMethod === "POST") {
+      return sendToSendGrid
+        .then((res) => {
+          return {
+            statusCode: res[0].statusCode,
+            body: JSON.stringify({
+              success: true,
+              message: "Email sent",
+            }),
+          };
+        })
+        .catch((error) => {
+          return {
+            statusCode: error.code,
+            body: JSON.stringify({
+              success: false,
+              error: error.message,
+              message: error.response.body.errors[0].message,
+            }),
+          };
+        });
+    }
     return {
-      statusCode: 200,
+      statusCode: 401,
       headers,
-      body: JSON.stringify({ message: "Successful preflight call." }),
     };
-  } else if (event.httpMethod === "POST") {
-    return sendToSendGrid
-      .then((res) => {
-        return {
-          statusCode: res[0].statusCode,
-          body: JSON.stringify({
-            success: true,
-            message: "Email sent",
-          }),
-        };
-      })
-      .catch((error) => {
-        return {
-          statusCode: error.code,
-          body: JSON.stringify({
-            success: false,
-            error: error.message,
-            message: error.response.body.errors[0].message,
-          }),
-        };
-      });
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      body: e.toString(),
+    };
   }
 };
