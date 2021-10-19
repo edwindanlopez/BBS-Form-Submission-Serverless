@@ -71,6 +71,11 @@ typings/
 # dotenv environment variables file
 .env
 .env.test
+.env\*
+.env.*
+.env.development
+.env.production
+.env.build
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -105,3 +110,9 @@ dist
 sendgrid.env
 
 .vercel
+
+# Local Netlify folder
+.netlify
+# @netlify/plugin-gatsby ignores start
+functions/gatsby
+# @netlify/plugin-gatsby ignores end
