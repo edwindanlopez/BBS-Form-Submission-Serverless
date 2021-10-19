@@ -1,7 +1,4 @@
 [build]
+  publish = "."
   functions = "functions"
-
-[[headers]]
-   for = "/*"
-   [headers.values]
-      Access-Control-Allow-Origin = "*"
+  command = "echo 'I be buildin' "

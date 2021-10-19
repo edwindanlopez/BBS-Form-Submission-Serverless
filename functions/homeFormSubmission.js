@@ -2,10 +2,18 @@ require("dotenv").config();
 const sendgrid = require("@sendgrid/mail");
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
-exports.handler = async (event, context) => {
-  const { fullName, email, message, files } = JSON.parse(event.body);
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Origin, X-Requested-With, Content-Type, Accept",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
+exports.handler = async (event, context) => {
   const sendToSendGrid = new Promise((resolve, reject) => {
+    // parse incoming req data
+    const { fullName, email, message, files } = JSON.parse(event.body);
+
     sendgrid
       .send({
         personalizations: [
@@ -17,17 +25,17 @@ exports.handler = async (event, context) => {
             ],
             bcc: [
               {
-                email: process.env.SENDGRID_VERIFIED_SENDER,
+                email: `${process.env.SENDGRID_VERIFIED_SENDER}`,
               },
             ],
           },
         ],
         from: {
           name: "Build Beautiful Spaces",
-          email: process.env.SENDGRID_VERIFIED_SENDER,
+          email: `${process.env.SENDGRID_VERIFIED_SENDER}`,
         },
         subject: "BBS - Thanks for reaching out!",
-        templateId: process.env.TEMPLATE_ID_HOME_PAGE,
+        templateId: `${process.env.TEMPLATE_ID_HOME_PAGE}`,
         dynamic_template_data: {
           subject: "Project Inquiry",
           fullName: fullName,
@@ -44,22 +52,20 @@ exports.handler = async (event, context) => {
       });
   });
 
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
-
   if (event.httpMethod === "OPTIONS") {
     return {
-      headers,
-      statusCode: 204,
+      statusCode: 200,
+      headers: CORS_HEADERS,
     };
   } else if (event.httpMethod === "POST") {
     return sendToSendGrid
       .then((res) => {
         return {
           statusCode: res[0].statusCode,
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             success: true,
             message: "Email sent",
@@ -78,7 +84,7 @@ exports.handler = async (event, context) => {
       });
   }
   return {
-    headers,
-    statusCode: 401,
+    statusCode: 500,
+    body: JSON.stringify("Only accepting POST requests"),
   };
 };

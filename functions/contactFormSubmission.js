@@ -2,21 +2,30 @@ require("dotenv").config();
 const sendgrid = require("@sendgrid/mail");
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
-exports.handler = async (event, context) => {
-  // console.log("Logging parsed body: ", JSON.parse(event.body));
-  const {
-    firstName,
-    lastName,
-    email,
-    city,
-    message,
-    contactMethod,
-    phone,
-    subject,
-    file,
-  } = JSON.parse(event.body);
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Origin, X-Requested-With, Content-Type, Accept",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
+exports.handler = async (event, context) => {
   const sendToSendGrid = new Promise((resolve, reject) => {
+    // parse incoming req data
+    const {
+      firstName,
+      lastName,
+      email,
+      city,
+      message,
+      contactMethod,
+      phone,
+      subject,
+      file,
+    } = JSON.parse(event.body);
+
+    console.log("File size: ", file.size);
+
     sendgrid
       .send({
         personalizations: [
@@ -28,17 +37,17 @@ exports.handler = async (event, context) => {
             ],
             bcc: [
               {
-                email: process.env.SENDGRID_VERIFIED_SENDER,
+                email: `${process.env.SENDGRID_VERIFIED_SENDER}`,
               },
             ],
           },
         ],
         from: {
           name: "Build Beautiful Spaces",
-          email: process.env.SENDGRID_VERIFIED_SENDER,
+          email: `${process.env.SENDGRID_VERIFIED_SENDER}`,
         },
         subject: "BBS - Successfully received your message!",
-        templateId: process.env.TEMPLATE_ID_CONTACT_PAGE,
+        templateId: `${process.env.TEMPLATE_ID_CONTACT_PAGE}`,
         dynamic_template_data: {
           firstName: firstName,
           lastName: lastName,
@@ -49,28 +58,28 @@ exports.handler = async (event, context) => {
           phone: phone,
           subject: subject,
           attachment: (() => {
-            file
-              ? {
-                  content: file.base64Url,
-                  filename: file.filename,
-                  size: file.size,
-                  type: file.type,
-                }
-              : "";
+            if (file.base64Url) {
+              return {
+                content: file.base64Url,
+                filename: file.filename,
+                size: file.size,
+                type: file.type,
+              };
+            }
           })(),
         },
         attachments: (() => {
-          file
-            ? [
-                {
-                  content: file.base64Url,
-                  filename: file.filename,
-                  type: file.type,
-                  disposition: "attachment",
-                  content_id: "form-attachement",
-                },
-              ]
-            : "";
+          if (file.base64Url) {
+            return [
+              {
+                content: file.base64Url,
+                filename: file.filename,
+                type: file.type,
+                disposition: "attachment",
+                content_id: "form-attachement",
+              },
+            ];
+          }
         })(),
       })
       .then((res) => {
@@ -81,22 +90,20 @@ exports.handler = async (event, context) => {
       });
   });
 
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
-
   if (event.httpMethod === "OPTIONS") {
     return {
-      headers,
       statusCode: 204,
+      headers: CORS_HEADERS,
     };
   } else if (event.httpMethod === "POST") {
     return sendToSendGrid
       .then((res) => {
         return {
           statusCode: res[0].statusCode,
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             success: true,
             message: "Email sent",
@@ -115,38 +122,7 @@ exports.handler = async (event, context) => {
       });
   }
   return {
-    headers,
-    statusCode: 401,
+    statusCode: 500,
+    body: JSON.stringify("Only accepting POST requests"),
   };
 };
-
-// let headers = {
-//   "Access-Control-Allow-Headers":
-//     "Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Origin",
-//   "Content-Type": "application/json", //optional
-//   "Access-Control-Allow-Methods": "POST, OPTIONS",
-//   "Access-Control-Max-Age": "8640",
-// };
-
-// headers["Access-Control-Allow-Origin"] = "*";
-// headers["Vary"] = "Origin";
-
-//---
-
-// const allowCors = (fn) => async (req, res) => {
-//   res.setHeader("Access-Control-Allow-Credentials", true);
-//   res.setHeader("Accept-Control-Allow-Origin", "*");
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   // another common pattern
-//   // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
-//   res.setHeader("Access-Control-Allow-Methods", "OPTIONS,POST");
-//   res.setHeader(
-//     "Access-Control-Allow-Headers",
-//     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
-//   );
-//   if (req.method === "OPTIONS") {
-//     res.status(200).end();
-//     return;
-//   }
-//   return await fn(req, res);
-// };
