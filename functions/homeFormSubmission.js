@@ -3,6 +3,12 @@ const sendgrid = require("@sendgrid/mail");
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.handler = async (event, context) => {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  };
+
   const { fullName, email, message, files } = JSON.parse(event.body);
 
   const sendToSendGrid = new Promise((resolve, reject) => {
@@ -59,5 +65,13 @@ exports.handler = async (event, context) => {
       });
   });
 
-  return sendToSendGrid;
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ message: "Successful preflight call." }),
+    };
+  } else if (event.httpMethod === "POST") {
+    return sendToSendGrid;
+  }
 };
