@@ -11,7 +11,7 @@ exports.handler = async (event, context) => {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   };
 
-  console.log("Logging parsed body: ", JSON.parse(event.body));
+  // console.log("Logging parsed body: ", JSON.parse(event.body));
   const {
     firstName,
     lastName,
@@ -56,44 +56,36 @@ exports.handler = async (event, context) => {
           methodOfContact: contactMethod,
           phone: phone,
           subject: subject,
-          attachment: {
-            content: file.base64Url,
-            filename: file.filename,
-            size: file.size,
-            type: file.type,
-          },
+          attachment: (() => {
+            file
+              ? {
+                  content: file.base64Url,
+                  filename: file.filename,
+                  size: file.size,
+                  type: file.type,
+                }
+              : "";
+          })(),
         },
-        attachments: [
-          {
-            content: file.base64Url,
-            filename: file.filename,
-            type: file.type,
-            disposition: "attachment",
-            content_id: "form-attachement",
-          },
-        ],
+        attachments: (() => {
+          file
+            ? [
+                {
+                  content: file.base64Url,
+                  filename: file.filename,
+                  type: file.type,
+                  disposition: "attachment",
+                  content_id: "form-attachement",
+                },
+              ]
+            : "";
+        })(),
       })
       .then((res) => {
-        console.log("Successful Result: ", res);
-        resolve(
-          JSON.stringify({
-            statusCode: 200,
-            success: true,
-            result: res,
-            message: "Email sent",
-          })
-        );
+        resolve(res);
       })
       .catch((error) => {
-        console.log("Error in devContactFormSubmission: ", error);
-        reject(
-          JSON.stringify({
-            statusCode: 500,
-            success: false,
-            error: error,
-            message: "There was a problem with your request",
-          })
-        );
+        reject(error);
       });
   });
 
@@ -104,7 +96,26 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({ message: "Successful preflight call." }),
     };
   } else if (event.httpMethod === "POST") {
-    return sendToSendGrid;
+    return sendToSendGrid
+      .then((res) => {
+        return {
+          statusCode: res[0].statusCode,
+          body: JSON.stringify({
+            success: true,
+            message: "Email sent",
+          }),
+        };
+      })
+      .catch((error) => {
+        return {
+          statusCode: error.code,
+          body: JSON.stringify({
+            success: false,
+            error: error.message,
+            message: error.response.body.errors[0].message,
+          }),
+        };
+      });
   }
 };
 

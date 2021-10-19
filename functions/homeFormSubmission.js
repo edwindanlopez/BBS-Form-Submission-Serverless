@@ -45,25 +45,10 @@ exports.handler = async (event, context) => {
         },
       })
       .then((res) => {
-        console.log("Successful Result: ", res);
-        resolve(
-          JSON.stringify({
-            statusCode: 202,
-            response: res,
-            message: "Your inquiry was successfully sent!",
-          })
-        );
+        resolve(res);
       })
       .catch((error) => {
-        console.log("Error in homeFormSubmission: ", error);
-        reject(
-          JSON.stringify({
-            statusCode: 500,
-            success: false,
-            error: error,
-            message: "There was a problem with your request",
-          })
-        );
+        reject(error);
       });
   });
 
@@ -74,6 +59,25 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({ message: "Successful preflight call." }),
     };
   } else if (event.httpMethod === "POST") {
-    return sendToSendGrid;
+    return sendToSendGrid
+      .then((res) => {
+        return {
+          statusCode: res[0].statusCode,
+          body: JSON.stringify({
+            success: true,
+            message: "Email sent",
+          }),
+        };
+      })
+      .catch((error) => {
+        return {
+          statusCode: error.code,
+          body: JSON.stringify({
+            success: false,
+            error: error.message,
+            message: error.response.body.errors[0].message,
+          }),
+        };
+      });
   }
 };
