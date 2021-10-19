@@ -4,7 +4,9 @@ sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.handler = async (event, context) => {
   const headers = {
+    "Accept-Control-Allow-Origin": "*",
     "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Credentials": true,
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   };
